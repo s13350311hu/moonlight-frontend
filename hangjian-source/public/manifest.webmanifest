@@ -1,0 +1,16 @@
+{
+  "name": "行間",
+  "short_name": "行間",
+  "description": "小說寫作台：章節、設定集、伏筆、素材，加上物語の体操的方程式與字卡。",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#15171A",
+  "theme_color": "#15171A",
+  "lang": "zh-Hant",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}
