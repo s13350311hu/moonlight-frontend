@@ -24,8 +24,13 @@ export function PoetryPanel() {
   const [aiResult, setAiResult] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
 
+  // --- 模式 3：AI 盲點診斷狀態 ---
+  const [draftText, setDraftText] = useState('');
+  const [coachResult, setCoachResult] = useState('');
+  const [isCoaching, setIsCoaching] = useState(false);
+
   // --- UI 狀態 ---
-  const [activeTab, setActiveTab] = useState<'search' | 'ai'>('search'); // 控制目前在哪個頁籤
+  const [activeTab, setActiveTab] = useState<'search' | 'ai' | 'coach'>('search'); 
   const [isOpen, setIsOpen] = useState(false);
   const [showBackpack, setShowBackpack] = useState(false);
   const [position, setPosition] = useState({ x: 50, y: 50 });
@@ -66,8 +71,12 @@ export function PoetryPanel() {
         body: JSON.stringify({ base_text: baseText, style, emotion, scenario })
       });
       const data = await response.json();
+      
       if (data.status === 'success') {
-        setAiResult(data.data);
+        const safeText = typeof data.data === 'string' 
+          ? data.data 
+          : JSON.stringify(data.data, null, 2);
+        setAiResult(safeText);
       } else {
         setAiResult('❌ 生成失敗：' + data.message);
       }
@@ -75,6 +84,32 @@ export function PoetryPanel() {
       setAiResult('❌ 連線失敗，請確認後端伺服器是否開啟。');
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  // 🌟 執行 AI 盲點診斷
+  const handleCoaching = async () => {
+    if (!draftText.trim()) return alert("請先貼上你的草稿！");
+    
+    setIsCoaching(true);
+    setCoachResult('');
+    try {
+      const response = await fetch('https://moonlight-backend-chdj.onrender.com/api/writing_coach', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ draft_text: draftText })
+      });
+      const data = await response.json();
+      
+      if (data.status === 'success') {
+        setCoachResult(data.data);
+      } else {
+        setCoachResult('❌ 診斷失敗：' + data.message);
+      }
+    } catch (error) {
+      setCoachResult('❌ 連線失敗，請確認後端伺服器是否開啟。');
+    } finally {
+      setIsCoaching(false);
     }
   };
 
@@ -127,6 +162,9 @@ export function PoetryPanel() {
           <button onClick={() => setActiveTab('ai')} style={{ flex: 1, padding: '8px', border: 'none', background: 'none', borderBottom: activeTab === 'ai' ? '2px solid #75a862' : 'none', color: activeTab === 'ai' ? '#75a862' : '#666', fontWeight: activeTab === 'ai' ? 'bold' : 'normal', cursor: 'pointer' }}>
             ✨ AI 擴寫
           </button>
+          <button onClick={() => setActiveTab('coach')} style={{ flex: 1, padding: '8px', border: 'none', background: 'none', borderBottom: activeTab === 'coach' ? '2px solid #75a862' : 'none', color: activeTab === 'coach' ? '#75a862' : '#666', fontWeight: activeTab === 'coach' ? 'bold' : 'normal', cursor: 'pointer' }}>
+            🩺 盲點診斷
+          </button>
         </div>
 
         {/* 共用標籤區 */}
@@ -169,9 +207,30 @@ export function PoetryPanel() {
             </div>
           </>
         )}
+
+        {/* 模式 3：AI 盲點診斷介面 */}
+        {activeTab === 'coach' && (
+          <>
+            <textarea 
+              value={draftText} 
+              onChange={(e) => setDraftText(e.target.value)} 
+              placeholder="貼上約 100~500 字的草稿，讓 AI 編輯給你專業建議..." 
+              style={{ width: '100%', height: '100px', marginBottom: '8px', padding: '6px', boxSizing: 'border-box', resize: 'vertical' }} 
+            />
+            <button 
+              onClick={handleCoaching} 
+              disabled={isCoaching} 
+              style={{ width: '100%', padding: '8px', backgroundColor: isCoaching ? '#aaa' : '#e67e22', color: 'white', border: 'none', borderRadius: '4px', cursor: isCoaching ? 'not-allowed' : 'pointer' }}>
+              {isCoaching ? '🩺 編輯審稿中...' : '🩺 請 AI 教練給建議'}
+            </button>
+            <div style={{ marginTop: '15px', maxHeight: '250px', overflowY: 'auto', fontSize: '14px', backgroundColor: '#fff', padding: '10px', borderRadius: '6px', border: '1px solid #eee', whiteSpace: 'pre-wrap', lineHeight: '1.5' }}>
+              {coachResult ? coachResult : <p style={{ color: '#999', margin: 0 }}>將卡關的段落貼上來，幫你突破盲點。</p>}
+            </div>
+          </>
+        )}
       </div>
 
-      {/* 背包側邊欄 (維持不變) */}
+      {/* 背包側邊欄 */}
       {showBackpack && (
         <div style={{ backgroundColor: '#fff', border: '1px solid #ccc', borderRadius: '12px', boxShadow: '0 8px 24px rgba(0,0,0,0.15)', padding: '15px', width: '200px', display: 'flex', flexDirection: 'column' }}>
           <h4 style={{ margin: '0 0 10px 0', borderBottom: '1px solid #eee', paddingBottom: '5px' }}>🎒 我的靈感庫</h4>
