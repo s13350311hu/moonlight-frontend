@@ -146,34 +146,62 @@ def expand_inspiration(req: ExpandRequest):
     except Exception as e:
         return {"status": "error", "message": f"AI 生成失敗：{str(e)}"}
     
-@app.route('/api/writing_coach', methods=['POST'])
-def writing_coach():
+# ==========================================
+# 🌟 第三階段全新：AI 盲點診斷室 API (寫作教練)
+# ==========================================
+class CoachRequest(BaseModel):
+    draft_text: str
+
+@app.post("/api/writing_coach")
+def writing_coach(req: CoachRequest):
+    if not req.draft_text.strip():
+        return {"status": "error", "message": "請提供需要診斷的草稿內容。"}
+
+    # 這裡就是 Prompt Engineering 的魔法所在
+    prompt = f"""
+    你現在是一位溫和且專業的小說編輯。請針對以下新人的文稿，給出三個具體的修改建議，並指出一個寫得好的地方給予溫暖的鼓勵。
+    請用繁體中文回覆，排版要清晰易讀（請善用條列式與段落）。
+
+    【新人文稿】：
+    {req.draft_text}
+    """
+
     try:
-        data = request.json
-        draft_text = data.get('draft_text', '')
-
-        if not draft_text.strip():
-            return jsonify({'status': 'error', 'message': '請提供需要診斷的草稿內容。'})
-
-        # 這裡就是 Prompt Engineering 的魔法所在
-        prompt = f"""
-        你現在是一位溫和且專業的小說編輯。請針對以下新人的文稿，給出三個具體的修改建議，並指出一個寫得好的地方給予溫暖的鼓勵。
-        請用繁體中文回覆，排版要清晰易讀（請善用條列式與段落）。
-
-        【新人文稿】：
-        {draft_text}
-        """
-
-        # 呼叫 Gemini 產生建議 (請確認你的 model 變數名稱是否與原先一致)
+        # 呼叫 Gemini 產生建議
         response = model.generate_content(prompt)
-        
-        return jsonify({
-            'status': 'success', 
-            'data': response.text
-        })
-
+        # FastAPI 不需要 jsonify，直接回傳字典即可
+        return {"status": "success", "data": response.text}
     except Exception as e:
         print(f"寫作教練 API 發生錯誤: {e}")
-        return jsonify({'status': 'error', 'message': '診斷過程中發生錯誤，請稍後再試。'})
-    # 強制觸發 Render 更新盲點診斷 API
-    # 觸發 Render 更新
+        return {"status": "error", "message": "診斷過程中發生錯誤，請稍後再試。"}
+
+
+# ==========================================
+# 🌟 第四階段全新：AI 伏筆與設定追蹤器 API (Story Bible)
+# ==========================================
+class BibleRequest(BaseModel):
+    bible_text: str
+    draft_text: str
+
+@app.post("/api/story_bible_scan")
+def story_bible_scan(req: BibleRequest):
+    if not req.bible_text.strip() or not req.draft_text.strip():
+        return {"status": "error", "message": "設定集與草稿皆不能為空"}
+
+    prompt = f"""
+    你是一位嚴謹的小說邏輯審查員。請根據作者提供的【專案設定集】，檢查【最新草稿】中是否有違反設定、產生矛盾或未回收的伏筆。
+    請用繁體中文回覆。若有發現問題，請務必以「警告：...」或「提醒：...」格式指出。若無問題請給予簡短鼓勵。
+
+    【專案設定集】：
+    {req.bible_text}
+
+    【最新草稿】：
+    {req.draft_text}
+    """
+
+    try:
+        response = model.generate_content(prompt)
+        return {"status": "success", "data": response.text}
+    except Exception as e:
+        print(f"邏輯掃描發生錯誤: {e}")
+        return {"status": "error", "message": str(e)}
