@@ -145,3 +145,33 @@ def expand_inspiration(req: ExpandRequest):
         return {"status": "success", "data": response.text}
     except Exception as e:
         return {"status": "error", "message": f"AI 生成失敗：{str(e)}"}
+    
+@app.route('/api/writing_coach', methods=['POST'])
+def writing_coach():
+    try:
+        data = request.json
+        draft_text = data.get('draft_text', '')
+
+        if not draft_text.strip():
+            return jsonify({'status': 'error', 'message': '請提供需要診斷的草稿內容。'})
+
+        # 這裡就是 Prompt Engineering 的魔法所在
+        prompt = f"""
+        你現在是一位溫和且專業的小說編輯。請針對以下新人的文稿，給出三個具體的修改建議，並指出一個寫得好的地方給予溫暖的鼓勵。
+        請用繁體中文回覆，排版要清晰易讀（請善用條列式與段落）。
+
+        【新人文稿】：
+        {draft_text}
+        """
+
+        # 呼叫 Gemini 產生建議 (請確認你的 model 變數名稱是否與原先一致)
+        response = model.generate_content(prompt)
+        
+        return jsonify({
+            'status': 'success', 
+            'data': response.text
+        })
+
+    except Exception as e:
+        print(f"寫作教練 API 發生錯誤: {e}")
+        return jsonify({'status': 'error', 'message': '診斷過程中發生錯誤，請稍後再試。'})
