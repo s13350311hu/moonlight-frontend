@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+pandas
+openpyxl
+opencc-python-reimplemented
+python-dotenv
+google-generativeai
