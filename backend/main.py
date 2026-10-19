@@ -176,4 +176,4 @@ def writing_coach():
         print(f"寫作教練 API 發生錯誤: {e}")
         return jsonify({'status': 'error', 'message': '診斷過程中發生錯誤，請稍後再試。'})
     # 強制觸發 Render 更新盲點診斷 API
-    
+    # 觸發 Render 更新
