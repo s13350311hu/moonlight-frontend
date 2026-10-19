@@ -101,7 +101,7 @@ export function PoetryPanel() {
     setIsCoaching(true);
     setCoachResult('');
     try {
-      const response = await fetch('https://moonlight-backend-chdj.onrender.com/api/expand_inspiration', {
+      const response = await fetch('https://moonlight-backend-chdj.onrender.com/api/writing_coach', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ draft_text: draftText })
@@ -121,7 +121,7 @@ export function PoetryPanel() {
     setIsScanning(true);
     setScanResult('');
     try {
-      const response = await fetch('https://moonlight-backend-chdj.onrender.com/api/expand_inspiration', {
+      const response = await fetch('https://moonlight-backend-chdj.onrender.com/api/story_bible_scan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ bible_text: bibleText, draft_text: chapterDraft })
